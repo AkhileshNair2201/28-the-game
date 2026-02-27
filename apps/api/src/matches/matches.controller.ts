@@ -1,13 +1,28 @@
-import { BadRequestException, Body, Controller, Get, Inject, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  UseGuards
+} from '@nestjs/common';
 import { AuthGuard } from '../common/auth.guard';
 import { CurrentUserId } from '../common/current-user-id.decorator';
 import { MatchIntent } from './matches.types';
 import { MatchesService } from './matches.service';
+import { StructuredLoggerService } from '../common/structured-logger.service';
+import { ObservabilityService } from '../observability/observability.service';
 
 @Controller('matches')
 @UseGuards(AuthGuard)
 export class MatchesController {
-  constructor(@Inject(MatchesService) private readonly matchesService: MatchesService) {}
+  constructor(
+    @Inject(MatchesService) private readonly matchesService: MatchesService,
+    @Inject(StructuredLoggerService) private readonly logger: StructuredLoggerService,
+    @Inject(ObservabilityService) private readonly observabilityService: ObservabilityService
+  ) {}
 
   @Post('start')
   startMatch(@CurrentUserId() actorUserId: string, @Body() body: { roomCode?: string }) {
@@ -15,7 +30,15 @@ export class MatchesController {
       throw new BadRequestException('roomCode is required');
     }
 
-    return this.matchesService.startMatch(body.roomCode, actorUserId);
+    const state = this.matchesService.startMatch(body.roomCode, actorUserId);
+    this.logger.info('match.started', {
+      roomCode: body.roomCode,
+      matchId: state.matchId,
+      userId: actorUserId,
+      version: state.version
+    });
+
+    return state;
   }
 
   @Get(':matchId/state')
@@ -34,6 +57,31 @@ export class MatchesController {
     @CurrentUserId() actorUserId: string,
     @Body() body: MatchIntent
   ) {
-    return this.matchesService.applyIntent(matchId, actorUserId, body);
+    const start = performance.now();
+    this.observabilityService.recordActionReceived();
+
+    try {
+      const result = this.matchesService.applyIntent(matchId, actorUserId, body);
+      this.logger.info('match.intent_accepted', {
+        matchId,
+        userId: actorUserId,
+        requestId: body.request_id,
+        type: body.type,
+        version: result.version
+      });
+      return result;
+    } catch (error) {
+      this.observabilityService.recordInvalidAction();
+      this.logger.warn('match.intent_rejected', {
+        matchId,
+        userId: actorUserId,
+        requestId: body.request_id,
+        type: body.type,
+        reason: error instanceof Error ? error.message : 'unknown'
+      });
+      throw error;
+    } finally {
+      this.observabilityService.recordActionLatency(performance.now() - start);
+    }
   }
 }

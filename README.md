@@ -30,6 +30,11 @@ pnpm test
 pnpm lint
 ```
 
+## QA and Release
+- QA plan: `docs/QA_TEST_PLAN.md`
+- Release checklist: `docs/RELEASE_CHECKLIST.md`
+- Runtime metrics: `GET /api/observability/metrics`
+
 ## Git Hooks
 Install repo-managed hooks once:
 ```bash
@@ -73,6 +78,12 @@ Room code rules:
 - Keep app-specific env files per app (`apps/web/.env`, `apps/api/.env`).
 - Validate env vars at startup before serving requests.
 - Never commit secrets.
+
+Additional API envs for production hardening:
+- `JWT_TTL_SECONDS`
+- `CORS_ORIGIN`
+- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_MAX`
 
 ## Conventions
 See `docs/CONVENTIONS.md`.

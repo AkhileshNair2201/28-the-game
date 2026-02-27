@@ -14,12 +14,17 @@ import { MatchesController } from './matches/matches.controller';
 import { MatchesService } from './matches/matches.service';
 import { MatchEventsService } from './matches/match-events.service';
 import { MatchGateway } from './matches/match.gateway';
+import { ObservabilityController } from './observability/observability.controller';
+import { ObservabilityService } from './observability/observability.service';
+import { StructuredLoggerService } from './common/structured-logger.service';
 
 @Module({
   imports: [],
-  controllers: [AppController, AuthController, UsersController, LobbiesController, MatchesController],
+  controllers: [AppController, AuthController, UsersController, LobbiesController, MatchesController, ObservabilityController],
   providers: [
     AppService,
+    StructuredLoggerService,
+    ObservabilityService,
     AuthTokenService,
     UsersService,
     AuthGuard,

@@ -13,11 +13,15 @@ import {
 import { CurrentUserId } from '../common/current-user-id.decorator';
 import { AuthGuard } from '../common/auth.guard';
 import { LobbiesService } from './lobbies.service';
+import { StructuredLoggerService } from '../common/structured-logger.service';
 
 @Controller('lobbies')
 @UseGuards(AuthGuard)
 export class LobbiesController {
-  constructor(@Inject(LobbiesService) private readonly lobbiesService: LobbiesService) {}
+  constructor(
+    @Inject(LobbiesService) private readonly lobbiesService: LobbiesService,
+    @Inject(StructuredLoggerService) private readonly logger: StructuredLoggerService
+  ) {}
 
   @Patch(':roomCode/ready')
   setReady(@Param('roomCode') roomCode: string, @CurrentUserId() userId: string, @Body() body: { ready?: boolean }) {
@@ -25,17 +29,34 @@ export class LobbiesController {
       throw new BadRequestException('`ready` boolean is required.');
     }
 
-    return this.lobbiesService.setReady(roomCode, userId, body.ready);
+    const lobby = this.lobbiesService.setReady(roomCode, userId, body.ready);
+    this.logger.info('lobby.ready_updated', {
+      roomCode,
+      userId,
+      ready: body.ready,
+      version: lobby.version
+    });
+
+    return lobby;
   }
 
   @Post()
   createLobby(@CurrentUserId() userId: string) {
-    return this.lobbiesService.createLobby(userId);
+    const lobby = this.lobbiesService.createLobby(userId);
+    this.logger.info('lobby.created', { roomCode: lobby.roomCode, userId, lobbyId: lobby.lobbyId });
+    return lobby;
   }
 
   @Post(':roomCode/join')
   joinLobby(@Param('roomCode') roomCode: string, @CurrentUserId() userId: string) {
-    return this.lobbiesService.joinLobby(roomCode, userId);
+    const lobby = this.lobbiesService.joinLobby(roomCode, userId);
+    this.logger.info('lobby.joined', {
+      roomCode,
+      userId,
+      players: lobby.players.length,
+      version: lobby.version
+    });
+    return lobby;
   }
 
   @Get(':roomCode')
@@ -46,6 +67,7 @@ export class LobbiesController {
   @Delete(':roomCode')
   deleteLobby(@Param('roomCode') roomCode: string, @CurrentUserId() userId: string) {
     this.lobbiesService.deleteLobby(roomCode, userId);
+    this.logger.info('lobby.deleted', { roomCode, userId });
 
     return {
       deleted: true,

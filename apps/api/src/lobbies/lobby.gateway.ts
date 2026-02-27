@@ -19,6 +19,7 @@ import { AuthTokenService } from '../auth/auth-token.service';
 import { LobbiesService } from './lobbies.service';
 import { LobbyEventsService } from './lobby-events.service';
 import { LobbyDomainEvent } from './lobby-events.types';
+import { ObservabilityService } from '../observability/observability.service';
 
 const HEARTBEAT_TIMEOUT_MS = 30_000;
 const HEARTBEAT_SWEEP_MS = 10_000;
@@ -53,7 +54,8 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   constructor(
     @Inject(AuthTokenService) private readonly authTokenService: AuthTokenService,
     @Inject(LobbiesService) private readonly lobbiesService: LobbiesService,
-    @Inject(LobbyEventsService) private readonly lobbyEventsService: LobbyEventsService
+    @Inject(LobbyEventsService) private readonly lobbyEventsService: LobbyEventsService,
+    @Inject(ObservabilityService) private readonly observabilityService: ObservabilityService
   ) {}
 
   onModuleInit(): void {
@@ -95,6 +97,7 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   handleConnection(client: Socket): void {
     const token = this.extractToken(client);
     const auth = this.authTokenService.verifyToken(token);
+    this.observabilityService.trackSocketConnected('lobby', auth.userId);
     client.data = {
       ...(client.data ?? {}),
       userId: auth.userId
@@ -102,6 +105,10 @@ export class LobbyGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   }
 
   handleDisconnect(client: Socket): void {
+    const data = client.data as SocketSessionData | undefined;
+    if (data?.userId) {
+      this.observabilityService.trackSocketDisconnected('lobby', data.userId);
+    }
     this.cleanupSocketContext(client.id);
   }
 

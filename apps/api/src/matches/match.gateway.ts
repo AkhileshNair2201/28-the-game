@@ -13,6 +13,7 @@ import { AuthTokenService } from '../auth/auth-token.service';
 import { MatchEventsService } from './match-events.service';
 import { MatchesService } from './matches.service';
 import { MatchDomainEvent } from './match-events.types';
+import { ObservabilityService } from '../observability/observability.service';
 
 interface SocketAuthData {
   userId: string;
@@ -36,7 +37,8 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   constructor(
     @Inject(AuthTokenService) private readonly authTokenService: AuthTokenService,
     @Inject(MatchesService) private readonly matchesService: MatchesService,
-    @Inject(MatchEventsService) private readonly matchEventsService: MatchEventsService
+    @Inject(MatchEventsService) private readonly matchEventsService: MatchEventsService,
+    @Inject(ObservabilityService) private readonly observabilityService: ObservabilityService
   ) {}
 
   onModuleInit(): void {
@@ -55,6 +57,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   handleConnection(client: Socket): void {
     const token = this.extractToken(client);
     const auth = this.authTokenService.verifyToken(token);
+    this.observabilityService.trackSocketConnected('match', auth.userId);
 
     client.data = {
       ...(client.data ?? {}),
@@ -63,6 +66,10 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   }
 
   handleDisconnect(client: Socket): void {
+    const data = client.data as SocketAuthData | undefined;
+    if (data?.userId) {
+      this.observabilityService.trackSocketDisconnected('match', data.userId);
+    }
     this.socketMatchMap.delete(client.id);
   }
 

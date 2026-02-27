@@ -6,6 +6,7 @@ interface TokenPayload {
   sub: string;
   typ: 'guest';
   iat: number;
+  exp: number;
 }
 
 interface AuthTokenPayload {
@@ -21,7 +22,8 @@ export class AuthTokenService {
     const body: TokenPayload = {
       sub: payload.userId,
       typ: 'guest',
-      iat: Math.floor(Date.now() / 1000)
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + this.env.jwtTtlSeconds
     };
 
     const encodedHeader = this.base64UrlEncode(JSON.stringify(header));
@@ -58,6 +60,11 @@ export class AuthTokenService {
 
     if (!payload.sub || payload.typ !== 'guest') {
       throw new UnauthorizedException('Invalid token payload.');
+    }
+
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    if (!payload.exp || payload.exp <= nowInSeconds) {
+      throw new UnauthorizedException('Token has expired.');
     }
 
     return {

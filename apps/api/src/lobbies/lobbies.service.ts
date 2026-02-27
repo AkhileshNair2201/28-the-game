@@ -166,6 +166,10 @@ export class LobbiesService {
     return lobby.players.some((player) => player.userId === userId);
   }
 
+  getActiveLobbyCount(): number {
+    return this.lobbiesByRoomCode.size;
+  }
+
   private generateUniqueRoomCode(): string {
     for (let attempt = 0; attempt < MAX_ROOM_CODE_ATTEMPTS; attempt += 1) {
       const roomCode = generateRoomCode(6);
