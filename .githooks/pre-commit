@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+set -eu
+
+printf '\n[pre-commit] Running build...\n'
+pnpm build
+
+printf '\n[pre-commit] Running tests...\n'
+pnpm test
+
+printf '\n[pre-commit] Running lint...\n'
+pnpm lint
+
+printf '\n[pre-commit] All checks passed.\n'

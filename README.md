@@ -30,6 +30,17 @@ pnpm test
 pnpm lint
 ```
 
+## Git Hooks
+Install repo-managed hooks once:
+```bash
+pnpm hooks:install
+```
+
+This enables `.githooks/pre-commit`, which runs:
+- `pnpm build`
+- `pnpm test`
+- `pnpm lint`
+
 ## Local PostgreSQL (Docker)
 ```bash
 docker compose up -d postgres
