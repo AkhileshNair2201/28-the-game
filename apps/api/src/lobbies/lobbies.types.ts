@@ -13,6 +13,7 @@ export interface LobbyRecord {
   roomCode: string;
   ownerUserId: string;
   status: LobbyStatus;
+  version: number;
   players: LobbyPlayer[];
   createdAt: string;
   updatedAt: string;
@@ -23,6 +24,7 @@ export interface LobbyView {
   roomCode: string;
   ownerUserId: string;
   status: LobbyStatus;
+  version: number;
   players: LobbyPlayer[];
   createdAt: string;
   updatedAt: string;

@@ -24,6 +24,7 @@ export interface LobbyView {
   roomCode: string;
   ownerUserId: string;
   status: 'waiting' | 'in_game' | 'closed';
+  version: number;
   players: LobbyPlayer[];
   createdAt: string;
   updatedAt: string;

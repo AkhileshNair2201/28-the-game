@@ -1,10 +1,13 @@
 import { FormEvent, ReactElement, useEffect, useMemo, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 import {
   createGuest,
   createLobby,
   deleteLobby,
   getCurrentUser,
+  getLobbySocketUrl,
   joinLobby,
+  setLobbyReady,
   updateNickname
 } from './lib/api';
 import { clearSession, getStoredSession, saveSession } from './lib/session';
@@ -32,6 +35,8 @@ export function App(): ReactElement {
   const [nicknameInput, setNicknameInput] = useState('');
   const [editNicknameInput, setEditNicknameInput] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [presenceMessage, setPresenceMessage] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
 
@@ -67,6 +72,62 @@ export function App(): ReactElement {
   }, []);
 
   const actionHint = useMemo(() => statusText(status), [status]);
+
+  useEffect(() => {
+    if (!session || !lobby || screen !== 'lobby') {
+      setIsSocketConnected(false);
+      setPresenceMessage('');
+      return;
+    }
+
+    const socket: Socket = io(`${getLobbySocketUrl()}/lobby`, {
+      auth: {
+        token: session.token
+      },
+      transports: ['websocket']
+    });
+
+    const pingTimer = window.setInterval(() => {
+      socket.emit('presence_ping');
+    }, 10_000);
+
+    socket.on('connect', () => {
+      setIsSocketConnected(true);
+      socket.emit('lobby_subscribe', { roomCode: lobby.roomCode });
+    });
+
+    socket.on('disconnect', () => {
+      setIsSocketConnected(false);
+    });
+
+    socket.on('lobby_snapshot', (event: { lobby: LobbyView }) => {
+      setLobby(event.lobby);
+    });
+
+    socket.on('player_joined', (event: { lobby: LobbyView }) => {
+      setLobby(event.lobby);
+    });
+
+    socket.on('ready_updated', (event: { lobby: LobbyView }) => {
+      setLobby(event.lobby);
+    });
+
+    socket.on('player_left', (event: { userId: string }) => {
+      setPresenceMessage(`Player disconnected: ${event.userId}`);
+    });
+
+    socket.on('lobby_deleted', (event: { roomCode: string }) => {
+      if (event.roomCode === lobby.roomCode) {
+        setLobby(null);
+        setPresenceMessage('Lobby was deleted by owner.');
+      }
+    });
+
+    return () => {
+      window.clearInterval(pingTimer);
+      socket.disconnect();
+    };
+  }, [session, lobby?.roomCode, screen]);
 
   async function onCreateGuest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -175,6 +236,26 @@ export function App(): ReactElement {
       setLobby(null);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Failed to delete lobby.');
+      setStatus('error');
+      return;
+    }
+
+    setStatus('idle');
+  }
+
+  async function onToggleReady(nextReady: boolean) {
+    if (!session || !lobby) {
+      return;
+    }
+
+    setStatus('saving');
+    setError('');
+
+    try {
+      const updatedLobby = await setLobbyReady(session.token, lobby.roomCode, nextReady);
+      setLobby(updatedLobby);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Failed to update ready state.');
       setStatus('error');
       return;
     }
@@ -322,15 +403,35 @@ export function App(): ReactElement {
               <div className="mt-6 rounded-xl border border-white/20 bg-black/20 p-4">
                 <p className="text-xs uppercase tracking-wider text-white/70">Active Lobby</p>
                 <p className="mt-2 text-xl font-semibold">Room: {lobby.roomCode}</p>
+                <p className="mt-2 text-sm text-emerald-100">
+                  Realtime: {isSocketConnected ? 'Connected' : 'Disconnected'}
+                </p>
+                <p className="mt-1 text-xs text-emerald-200">Version: {lobby.version}</p>
                 <p className="mt-3 text-sm text-emerald-100">Players ({lobby.players.length}/4):</p>
                 <ul className="mt-2 space-y-1 text-sm text-emerald-100">
                   {lobby.players.map((player) => (
                     <li key={player.userId}>
                       Seat {player.seat ?? '-'}: {player.nickname}
                       {player.userId === lobby.ownerUserId ? ' (Owner)' : ''}
+                      {player.ready ? ' [Ready]' : ' [Not Ready]'}
                     </li>
                   ))}
                 </ul>
+
+                {lobby.players.some((player) => player.userId === session.userId) ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentPlayer = lobby.players.find((player) => player.userId === session.userId);
+                      const nextReady = !(currentPlayer?.ready ?? false);
+                      void onToggleReady(nextReady);
+                    }}
+                    disabled={status === 'saving'}
+                    className="mt-4 mr-3 rounded-lg border border-emerald-200/70 px-4 py-2 text-sm text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    Toggle Ready
+                  </button>
+                ) : null}
 
                 {lobby.ownerUserId === session.userId ? (
                   <button
@@ -346,6 +447,7 @@ export function App(): ReactElement {
             )}
 
             {actionHint ? <p className="mt-4 text-sm text-emerald-100">{actionHint}</p> : null}
+            {presenceMessage ? <p className="mt-2 text-xs text-emerald-200">{presenceMessage}</p> : null}
             {error ? <p className="mt-4 text-sm text-rose-200">{error}</p> : null}
           </section>
         ) : null}

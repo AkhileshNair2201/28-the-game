@@ -8,10 +8,20 @@ import { UsersService } from './users/users.service';
 import { AuthGuard } from './common/auth.guard';
 import { LobbiesController } from './lobbies/lobbies.controller';
 import { LobbiesService } from './lobbies/lobbies.service';
+import { LobbyEventsService } from './lobbies/lobby-events.service';
+import { LobbyGateway } from './lobbies/lobby.gateway';
 
 @Module({
   imports: [],
   controllers: [AppController, AuthController, UsersController, LobbiesController],
-  providers: [AppService, AuthTokenService, UsersService, AuthGuard, LobbiesService]
+  providers: [
+    AppService,
+    AuthTokenService,
+    UsersService,
+    AuthGuard,
+    LobbiesService,
+    LobbyEventsService,
+    LobbyGateway
+  ]
 })
 export class AppModule {}

@@ -2,6 +2,10 @@ import { GuestSession, LobbyView, PublicUser } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api';
 
+export function getLobbySocketUrl(): string {
+  return API_BASE_URL.replace(/\/api$/, '');
+}
+
 interface ApiErrorPayload {
   message?: string | string[];
 }
@@ -90,5 +94,15 @@ export function deleteLobby(token: string, roomCode: string): Promise<{ deleted:
     headers: {
       Authorization: `Bearer ${token}`
     }
+  });
+}
+
+export function setLobbyReady(token: string, roomCode: string, ready: boolean): Promise<LobbyView> {
+  return fetchJson<LobbyView>(`/lobbies/${roomCode}/ready`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ ready })
   });
 }

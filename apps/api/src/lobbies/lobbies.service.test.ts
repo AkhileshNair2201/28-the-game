@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { LobbiesService } from './lobbies.service';
 import { UsersService } from '../users/users.service';
+import { LobbyEventsService } from './lobby-events.service';
 
 function createUsersAndLobbyService() {
   const usersService = new UsersService();
-  const lobbiesService = new LobbiesService(usersService);
+  const lobbyEventsService = new LobbyEventsService();
+  const lobbiesService = new LobbiesService(usersService, lobbyEventsService);
 
   return { usersService, lobbiesService };
 }
@@ -51,5 +53,16 @@ describe('LobbiesService', () => {
     lobbiesService.deleteLobby(lobby.roomCode, owner.userId);
 
     expect(() => lobbiesService.getLobby(lobby.roomCode)).toThrow();
+  });
+
+  it('updates ready state and bumps version', () => {
+    const { usersService, lobbiesService } = createUsersAndLobbyService();
+    const owner = usersService.createGuest('OwnerOne');
+    const lobby = lobbiesService.createLobby(owner.userId);
+
+    const updated = lobbiesService.setReady(lobby.roomCode, owner.userId, true);
+
+    expect(updated.version).toBeGreaterThan(lobby.version);
+    expect(updated.players.find((player) => player.userId === owner.userId)?.ready).toBe(true);
   });
 });
