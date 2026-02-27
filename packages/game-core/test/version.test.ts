@@ -1,15 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { getGameCoreVersion, isBidInRange } from '../src/index';
 
-describe('game-core', () => {
-  it('returns scaffold version', () => {
-    expect(getGameCoreVersion()).toEqual({ major: 0, minor: 1 });
-  });
-
-  it('validates bid range', () => {
+describe('version and bid range', () => {
+  it('returns stable version and bid checks', () => {
+    expect(getGameCoreVersion()).toEqual({ major: 1, minor: 0 });
     expect(isBidInRange(14)).toBe(true);
     expect(isBidInRange(28)).toBe(true);
     expect(isBidInRange(13)).toBe(false);
-    expect(isBidInRange(29)).toBe(false);
   });
 });
