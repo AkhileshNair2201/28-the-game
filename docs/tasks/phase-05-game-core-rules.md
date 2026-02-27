@@ -3,6 +3,10 @@
 ## Objective
 Implement pure deterministic Twenty-Eight rules per `docs/RULES.md`.
 
+## NestJS DI Safety
+- Use explicit constructor injection with `@Inject(...)` for any NestJS layer that consumes this package.
+- Do not rely on metadata-only injection in dev/watch runtime.
+
 ## Scope
 - Auction flow (14-28), bidder selection, trump selection.
 - Two play phases (before and after trump reveal).

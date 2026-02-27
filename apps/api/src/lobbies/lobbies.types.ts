@@ -1,15 +1,4 @@
-export interface GuestSession {
-  userId: string;
-  nickname: string;
-  token: string;
-  isGuest: boolean;
-}
-
-export interface PublicUser {
-  userId: string;
-  nickname: string;
-  isGuest: boolean;
-}
+export type LobbyStatus = 'waiting' | 'in_game' | 'closed';
 
 export interface LobbyPlayer {
   userId: string;
@@ -19,11 +8,21 @@ export interface LobbyPlayer {
   joinedAt: string;
 }
 
+export interface LobbyRecord {
+  lobbyId: string;
+  roomCode: string;
+  ownerUserId: string;
+  status: LobbyStatus;
+  players: LobbyPlayer[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface LobbyView {
   lobbyId: string;
   roomCode: string;
   ownerUserId: string;
-  status: 'waiting' | 'in_game' | 'closed';
+  status: LobbyStatus;
   players: LobbyPlayer[];
   createdAt: string;
   updatedAt: string;

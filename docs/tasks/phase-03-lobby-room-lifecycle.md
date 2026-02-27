@@ -3,6 +3,10 @@
 ## Objective
 Implement lobby creation, joining by room code, and creator-controlled deletion.
 
+## NestJS DI Safety
+- Use explicit constructor injection with `@Inject(...)` for every provider dependency.
+- Do not rely on metadata-only injection in dev/watch runtime.
+
 ## Scope
 - Any guest can create lobby.
 - Lobby gets shareable 6-character room code.

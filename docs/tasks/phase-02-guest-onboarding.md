@@ -3,6 +3,10 @@
 ## Objective
 Support instant guest onboarding with unique generated ID and editable nickname.
 
+## NestJS DI Safety
+- Use explicit constructor injection with `@Inject(...)` for every provider dependency.
+- Do not rely on metadata-only injection in dev/watch runtime.
+
 ## Scope
 - No mandatory signup for first play.
 - Generate immutable unique `userId` server-side.

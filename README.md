@@ -56,6 +56,19 @@ Postgres 17 is configured in `docker-compose.yml` and reads credentials from roo
 
 The API reads the same DB env variables via `apps/api/src/config/env.ts`.
 
+## Lobby APIs (Phase 03)
+All lobby endpoints require `Authorization: Bearer <token>`.
+
+- `POST /api/lobbies` - create a lobby
+- `POST /api/lobbies/:roomCode/join` - join a lobby
+- `GET /api/lobbies/:roomCode` - get lobby details
+- `DELETE /api/lobbies/:roomCode` - delete lobby (owner only)
+
+Room code rules:
+- Exactly 6 characters
+- Uses `[A-Za-z0-9_-]`
+- Generated code includes at least one letter, one digit, and one special char (`-` or `_`)
+
 ## Environment Strategy
 - Keep app-specific env files per app (`apps/web/.env`, `apps/api/.env`).
 - Validate env vars at startup before serving requests.

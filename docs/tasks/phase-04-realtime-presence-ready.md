@@ -3,6 +3,10 @@
 ## Objective
 Broadcast lobby changes live when players join/leave/ready.
 
+## NestJS DI Safety
+- Use explicit constructor injection with `@Inject(...)` for every provider dependency.
+- Do not rely on metadata-only injection in dev/watch runtime.
+
 ## Scope
 - Realtime updates for:
   - player joined

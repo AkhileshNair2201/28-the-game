@@ -1,4 +1,4 @@
-import { GuestSession, PublicUser } from './types';
+import { GuestSession, LobbyView, PublicUser } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api';
 
@@ -51,6 +51,42 @@ export function updateNickname(token: string, nickname: string): Promise<PublicU
 export function getCurrentUser(token: string): Promise<PublicUser> {
   return fetchJson<PublicUser>('/users/me', {
     method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+}
+
+export function createLobby(token: string): Promise<LobbyView> {
+  return fetchJson<LobbyView>('/lobbies', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+}
+
+export function joinLobby(token: string, roomCode: string): Promise<LobbyView> {
+  return fetchJson<LobbyView>(`/lobbies/${roomCode}/join`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+}
+
+export function getLobby(token: string, roomCode: string): Promise<LobbyView> {
+  return fetchJson<LobbyView>(`/lobbies/${roomCode}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+}
+
+export function deleteLobby(token: string, roomCode: string): Promise<{ deleted: boolean; roomCode: string }> {
+  return fetchJson<{ deleted: boolean; roomCode: string }>(`/lobbies/${roomCode}`, {
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`
     }

@@ -3,6 +3,10 @@
 ## Objective
 Establish monorepo structure, baseline tooling, and backend/frontend skeleton aligned to AGENT guidance.
 
+## NestJS DI Safety
+- Use explicit constructor injection with `@Inject(...)` for every provider dependency.
+- Do not rely on metadata-only injection in dev/watch runtime.
+
 ## Scope
 - Create project structure:
   - `apps/web` (React + TS + Vite + Tailwind)

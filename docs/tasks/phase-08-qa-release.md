@@ -3,6 +3,11 @@
 ## Objective
 Harden reliability, test critical flows, and prepare production deployment.
 
+## NestJS DI Safety
+- Include DI regression checks for provider wiring in test coverage.
+- Use explicit constructor injection with `@Inject(...)` for every provider dependency.
+- Do not rely on metadata-only injection in dev/watch runtime.
+
 ## Scope
 - End-to-end validation of lobby + gameplay + reconnect.
 - Metrics, logs, and error monitoring.

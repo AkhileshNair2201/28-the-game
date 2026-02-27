@@ -3,6 +3,10 @@
 ## Objective
 Deliver a modern, intuitive UI where all players are visible and card visibility rules are correct.
 
+## NestJS DI Safety
+- For UI-facing API adapters/controllers in NestJS, use explicit constructor injection with `@Inject(...)`.
+- Do not rely on metadata-only injection in dev/watch runtime.
+
 ## Scope
 - Single-screen table view showing all 4 players simultaneously.
 - Only own hand cards are visible; opponents/partner cards stay hidden.
