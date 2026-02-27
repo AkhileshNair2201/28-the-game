@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import {
   applyMatchIntent,
@@ -41,6 +41,7 @@ const SUIT_SYMBOL: Record<string, string> = {
   D: '♦',
   C: '♣'
 };
+const CONFETTI_COLORS = ['#facc15', '#22c55e', '#60a5fa', '#f472b6', '#fb7185', '#34d399'] as const;
 
 function statusText(status: Status): string {
   if (status === 'loading') {
@@ -211,6 +212,8 @@ export function App() {
   const [isCompactTable, setIsCompactTable] = useState(false);
   const [isPlayersPanelOpen, setIsPlayersPanelOpen] = useState(false);
   const [suppressAutoTableEntry, setSuppressAutoTableEntry] = useState(false);
+  const [showRoundWinConfetti, setShowRoundWinConfetti] = useState(false);
+  const lastCelebratedStateRef = useRef<string | null>(null);
 
   const previousMatchRef = useRef<ProjectedMatchState | null>(null);
   const actionHint = useMemo(() => statusText(status), [status]);
@@ -770,6 +773,36 @@ export function App() {
     }
   }, [bidOptions, selectedBid]);
 
+  useEffect(() => {
+    if (!match || !viewer || screen !== 'table') {
+      return;
+    }
+
+    if (match.roundState.phase !== 'round_end') {
+      return;
+    }
+
+    const winnerTeam = match.roundState.roundWinnerTeam;
+    if (!winnerTeam || winnerTeam !== viewer.team) {
+      return;
+    }
+
+    const celebrationKey = `${match.matchId}:${match.version}:${winnerTeam}`;
+    if (lastCelebratedStateRef.current === celebrationKey) {
+      return;
+    }
+    lastCelebratedStateRef.current = celebrationKey;
+
+    setShowRoundWinConfetti(true);
+    const hideTimer = window.setTimeout(() => {
+      setShowRoundWinConfetti(false);
+    }, 2600);
+
+    return () => {
+      window.clearTimeout(hideTimer);
+    };
+  }, [match, viewer, screen]);
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#0b5f45,_#04251b_65%)] text-white">
       <div className="mx-auto flex min-h-screen max-w-6xl items-center px-4 py-8 sm:px-6">
@@ -983,7 +1016,21 @@ export function App() {
         ) : null}
 
         {screen === 'table' && session && match && viewer ? (
-          <section className="w-full rounded-3xl border border-white/20 bg-black/20 p-4 shadow-2xl backdrop-blur-sm sm:p-6">
+          <section className="relative w-full overflow-hidden rounded-3xl border border-white/20 bg-black/20 p-4 shadow-2xl backdrop-blur-sm sm:p-6">
+            {showRoundWinConfetti ? (
+              <div className="confetti-layer" aria-hidden="true">
+                {Array.from({ length: 36 }).map((_, index) => {
+                  const style: CSSProperties = {
+                    left: `${(index * 23) % 100}%`,
+                    animationDelay: `${(index % 9) * 65}ms`,
+                    backgroundColor: CONFETTI_COLORS[index % CONFETTI_COLORS.length]
+                  };
+
+                  return <span key={`confetti-${match.version}-${index}`} className={`confetti-piece confetti-path-${index % 3}`} style={style} />;
+                })}
+              </div>
+            ) : null}
+
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-amber-200">Match Table</p>
@@ -1255,19 +1302,21 @@ export function App() {
               {(match.roundState.phase === 'play_before_trump' || match.roundState.phase === 'play_after_trump') &&
               match.roundState.currentTurnSeat === viewer.seat ? (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    disabled={isIntentPending}
-                    onClick={() =>
-                      void onSendIntent({
-                        type: 'request_trump_reveal',
-                        payload: {}
-                      })
-                    }
-                    className="rounded-md border border-white/30 px-3 py-2 text-sm text-white disabled:opacity-40"
-                  >
-                    Request Trump Reveal
-                  </button>
+                  {!match.roundState.trumpRevealed ? (
+                    <button
+                      type="button"
+                      disabled={isIntentPending}
+                      onClick={() =>
+                        void onSendIntent({
+                          type: 'request_trump_reveal',
+                          payload: {}
+                        })
+                      }
+                      className="rounded-md border border-white/30 px-3 py-2 text-sm text-white disabled:opacity-40"
+                    >
+                      Request Trump Reveal
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     disabled={isIntentPending}

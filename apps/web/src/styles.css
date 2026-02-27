@@ -208,6 +208,38 @@ body {
   padding: 0.75rem;
 }
 
+.confetti-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -16px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation-duration: 2200ms;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
+}
+
+.confetti-path-0 {
+  animation-name: confettiFallLeft;
+}
+
+.confetti-path-1 {
+  animation-name: confettiFallCenter;
+}
+
+.confetti-path-2 {
+  animation-name: confettiFallRight;
+}
+
 .card-button {
   background: transparent;
   border: none;
@@ -354,6 +386,54 @@ body {
   to {
     transform: translateY(0) scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes confettiFallLeft {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0) rotate(0deg);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(-120px, 680px, 0) rotate(760deg);
+  }
+}
+
+@keyframes confettiFallCenter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0) rotate(0deg);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 700px, 0) rotate(760deg);
+  }
+}
+
+@keyframes confettiFallRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -8px, 0) rotate(0deg);
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(120px, 680px, 0) rotate(760deg);
   }
 }
 
