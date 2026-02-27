@@ -1,0 +1,54 @@
+# Twenty-Eight Monorepo
+
+Monorepo for the Twenty-Eight (28) multiplayer web app.
+
+## Stack
+- Frontend: React + TypeScript + Vite + Tailwind CSS
+- Backend: NestJS + TypeScript + WebSocket-ready architecture
+- Shared: `packages/shared` for DTO/contracts
+- Rules: `packages/game-core` for pure game logic
+
+## Project Structure
+- `apps/web` - React client
+- `apps/api` - NestJS backend
+- `packages/game-core` - pure rule engine
+- `packages/shared` - shared types/contracts
+
+## Setup
+```bash
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+pnpm install
+```
+
+## Commands
+```bash
+pnpm dev
+pnpm build
+pnpm test
+pnpm lint
+```
+
+## Local PostgreSQL (Docker)
+```bash
+docker compose up -d postgres
+docker compose ps
+```
+
+Postgres 17 is configured in `docker-compose.yml` and reads credentials from root `.env`:
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+
+The API reads the same DB env variables via `apps/api/src/config/env.ts`.
+
+## Environment Strategy
+- Keep app-specific env files per app (`apps/web/.env`, `apps/api/.env`).
+- Validate env vars at startup before serving requests.
+- Never commit secrets.
+
+## Conventions
+See `docs/CONVENTIONS.md`.
