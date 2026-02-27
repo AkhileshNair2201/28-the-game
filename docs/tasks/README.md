@@ -28,6 +28,7 @@ Recommended stack used across phases:
 6. [Phase 06 - Match APIs, Events, and Authority Flow](/home/akhilesh/sandbox-dump/sandbox-28/28-the-game/docs/tasks/phase-06-match-api-events.md)
 7. [Phase 07 - Modern Table UI and Animations](/home/akhilesh/sandbox-dump/sandbox-28/28-the-game/docs/tasks/phase-07-ui-ux-animation.md)
 8. [Phase 08 - QA, Observability, and Release](/home/akhilesh/sandbox-dump/sandbox-28/28-the-game/docs/tasks/phase-08-qa-release.md)
+9. [Phase 09 - UI Refinement and Responsive UX](/home/akhilesh/sandbox-dump/sandbox-28/28-the-game/docs/tasks/phase-09-ui-refinement.md)
 
 ## User Minimum Requirements Mapping
 

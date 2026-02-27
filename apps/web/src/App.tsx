@@ -27,6 +27,13 @@ import {
 type Status = 'idle' | 'loading' | 'saving' | 'error';
 type Screen = 'onboarding' | 'profile' | 'lobby' | 'table';
 type RelativeSeat = 'self' | 'left' | 'top' | 'right';
+type ToastVariant = 'success' | 'error';
+
+interface Toast {
+  id: string;
+  message: string;
+  variant: ToastVariant;
+}
 
 const SUIT_SYMBOL: Record<string, string> = {
   S: '♠',
@@ -178,9 +185,47 @@ export function App() {
   const [selectedTrumpCardId, setSelectedTrumpCardId] = useState('');
   const [selectedBid, setSelectedBid] = useState(14);
   const [isIntentPending, setIsIntentPending] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [isCompactTable, setIsCompactTable] = useState(false);
+  const [isPlayersPanelOpen, setIsPlayersPanelOpen] = useState(false);
+  const [suppressAutoTableEntry, setSuppressAutoTableEntry] = useState(false);
 
   const previousMatchRef = useRef<ProjectedMatchState | null>(null);
   const actionHint = useMemo(() => statusText(status), [status]);
+
+  function pushToast(message: string, variant: ToastVariant = 'error') {
+    const id = crypto.randomUUID();
+    setToasts((current) => [...current, { id, message, variant }]);
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((toast) => toast.id !== id));
+    }, 3200);
+  }
+
+  function dismissToast(id: string) {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }
+
+  async function copyTextToClipboard(text: string): Promise<void> {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', 'true');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    const copied = document.execCommand('copy');
+    document.body.removeChild(textarea);
+
+    if (!copied) {
+      throw new Error('Clipboard copy failed.');
+    }
+  }
 
   function applyIncomingMatch(next: ProjectedMatchState) {
     const previous = previousMatchRef.current;
@@ -360,7 +405,37 @@ export function App() {
   }, [session, match?.matchId, screen]);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 900px)');
+    const onChange = () => {
+      const compact = mediaQuery.matches;
+      setIsCompactTable(compact);
+      if (!compact) {
+        setIsPlayersPanelOpen(false);
+      }
+    };
+
+    onChange();
+    mediaQuery.addEventListener('change', onChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', onChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    pushToast(error, 'error');
+  }, [error]);
+
+  useEffect(() => {
     if (!session || !lobby || screen !== 'lobby' || lobby.status !== 'in_game') {
+      return;
+    }
+
+    if (suppressAutoTableEntry) {
       return;
     }
 
@@ -372,7 +447,13 @@ export function App() {
       .catch(() => {
         setPresenceMessage('Match started. Enter table once state is available.');
       });
-  }, [session, lobby?.status, lobby?.roomCode, screen]);
+  }, [session, lobby?.status, lobby?.roomCode, screen, suppressAutoTableEntry]);
+
+  useEffect(() => {
+    if (!lobby || lobby.status !== 'in_game') {
+      setSuppressAutoTableEntry(false);
+    }
+  }, [lobby?.roomCode, lobby?.status]);
 
   function onClearSession() {
     clearSession();
@@ -384,7 +465,21 @@ export function App() {
     setRoomCodeInput('');
     setError('');
     setStatus('idle');
+    setSuppressAutoTableEntry(false);
     setScreen('onboarding');
+  }
+
+  async function onCopyRoomCode() {
+    if (!lobby) {
+      return;
+    }
+
+    try {
+      await copyTextToClipboard(lobby.roomCode);
+      pushToast('Room ID copied to clipboard.', 'success');
+    } catch {
+      pushToast('Could not copy Room ID. Please copy manually.', 'error');
+    }
   }
 
   async function onCreateGuest(event: FormEvent<HTMLFormElement>) {
@@ -520,6 +615,7 @@ export function App() {
     try {
       const projected = await startMatch(session.token, lobby.roomCode);
       applyIncomingMatch(projected);
+      setSuppressAutoTableEntry(false);
       setScreen('table');
       setStatus('idle');
     } catch (requestError) {
@@ -539,6 +635,7 @@ export function App() {
     try {
       const projected = await getMatchStateByRoom(session.token, lobby.roomCode);
       applyIncomingMatch(projected);
+      setSuppressAutoTableEntry(false);
       setScreen('table');
       setStatus('idle');
     } catch (requestError) {
@@ -597,6 +694,7 @@ export function App() {
       }
 
       setTableMessage(message);
+      pushToast(message, 'error');
       setStatus('error');
     } finally {
       setIsIntentPending(false);
@@ -778,7 +876,16 @@ export function App() {
             ) : (
               <div className="mt-6 rounded-xl border border-white/20 bg-black/30 p-4">
                 <p className="text-xs uppercase tracking-wider text-white/70">Active Lobby</p>
-                <p className="mt-2 text-xl font-semibold">Room: {lobby.roomCode}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <p className="text-xl font-semibold">Room: {lobby.roomCode}</p>
+                  <button
+                    type="button"
+                    onClick={onCopyRoomCode}
+                    className="rounded-md border border-white/30 px-3 py-1.5 text-xs text-white transition hover:bg-white/10"
+                  >
+                    Copy Room ID
+                  </button>
+                </div>
                 <p className="mt-2 text-sm text-emerald-100">
                   Realtime: {isLobbySocketConnected ? 'Connected' : 'Disconnected'}
                 </p>
@@ -867,11 +974,23 @@ export function App() {
               </div>
               <button
                 type="button"
-                onClick={() => setScreen('lobby')}
+                onClick={() => {
+                  setSuppressAutoTableEntry(true);
+                  setScreen('lobby');
+                }}
                 className="rounded-lg border border-white/30 px-3 py-2 text-sm text-white transition hover:bg-white/10"
               >
                 Back to Lobby
               </button>
+              {isCompactTable ? (
+                <button
+                  type="button"
+                  onClick={() => setIsPlayersPanelOpen(true)}
+                  className="rounded-lg border border-white/30 px-3 py-2 text-sm text-white transition hover:bg-white/10"
+                >
+                  Players
+                </button>
+              ) : null}
             </div>
 
             <div className="mb-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
@@ -899,8 +1018,13 @@ export function App() {
               </div>
             </div>
 
-            <div className={`table-layout ${dealAnimKey % 2 === 0 ? 'deal-anim-a' : 'deal-anim-b'}`}>
-              {match.players.map((player) => {
+            <div
+              className={`table-layout ${dealAnimKey % 2 === 0 ? 'deal-anim-a' : 'deal-anim-b'} ${
+                isCompactTable ? 'compact-table' : ''
+              }`}
+            >
+              {!isCompactTable
+                ? match.players.map((player) => {
                 const rs = relativeSeat(viewer.seat, player.seat);
                 return (
                   <PlayerSeatPanel
@@ -914,7 +1038,8 @@ export function App() {
                     points={match.roundState.cardPointsWon[player.team]}
                   />
                 );
-              })}
+              })
+                : null}
 
               <div className="table-center">
                 <div className="mb-2 text-center text-xs uppercase tracking-widest text-emerald-100/80">
@@ -934,7 +1059,8 @@ export function App() {
                 </div>
               </div>
 
-              {match.players.map((player) => {
+              {!isCompactTable
+                ? match.players.map((player) => {
                 if (player.seat === viewer.seat) {
                   return null;
                 }
@@ -947,7 +1073,8 @@ export function App() {
                     <HiddenCards count={match.roundState.hands[player.seat].hiddenCount} />
                   </div>
                 );
-              })}
+              })
+                : null}
 
               <div className="self-hand">
                 {match.roundState.hands[viewer.seat].visibleCards.map((card, index) => {
@@ -1140,8 +1267,61 @@ export function App() {
 
             {actionHint ? <p className="mt-3 text-sm text-emerald-100">{actionHint}</p> : null}
             {error ? <p className="mt-2 text-sm text-rose-200">{error}</p> : null}
+
+            {isCompactTable && isPlayersPanelOpen ? (
+              <div className="players-modal-overlay">
+                <div className="players-modal">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-white">Players</p>
+                    <button
+                      type="button"
+                      onClick={() => setIsPlayersPanelOpen(false)}
+                      className="rounded-md border border-white/30 px-2 py-1 text-xs text-white hover:bg-white/10"
+                    >
+                      Close
+                    </button>
+                  </div>
+                  <ul className="space-y-2">
+                    {match.players
+                      .slice()
+                      .sort((a, b) => a.seat - b.seat)
+                      .map((player) => (
+                        <li key={player.userId} className="rounded-lg border border-white/15 bg-black/25 p-2 text-xs">
+                          <p className="font-semibold text-white">
+                            {player.nickname} ({seatLabel(player.seat)})
+                          </p>
+                          <p className="text-emerald-100/90">
+                            Team {player.team} | Tricks {match.roundState.tricksWon[player.team]} | Points{' '}
+                            {match.roundState.cardPointsWon[player.team]}
+                          </p>
+                          <p className="text-emerald-100/90">
+                            {player.seat === match.roundState.currentTurnSeat ? 'Current Turn' : 'Waiting'}
+                            {player.seat === match.roundState.dealerSeat ? ' | Dealer' : ''}
+                            {player.seat === match.roundState.bidderSeat ? ' | Bidder' : ''}
+                          </p>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
           </section>
         ) : null}
+      </div>
+
+      <div className="toast-stack">
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`toast-item ${toast.variant === 'error' ? 'toast-error' : 'toast-success'}`}>
+            <p className="pr-3 text-sm">{toast.message}</p>
+            <button
+              type="button"
+              onClick={() => dismissToast(toast.id)}
+              className="text-xs text-white/80 hover:text-white"
+            >
+              Close
+            </button>
+          </div>
+        ))}
       </div>
     </main>
   );
