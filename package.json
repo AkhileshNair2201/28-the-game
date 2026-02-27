@@ -9,7 +9,9 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "format": "prettier --write .",
-    "hooks:install": "git config core.hooksPath .githooks"
+    "hooks:install": "git config core.hooksPath .githooks",
+    "clean:dist": "find . -type d -name dist -prune -exec rm -rf {} + && find . -type f -name '*.tsbuildinfo' -delete",
+    "clean:node_modules": "find . -type d -name node_modules -prune -exec rm -rf {} +"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
