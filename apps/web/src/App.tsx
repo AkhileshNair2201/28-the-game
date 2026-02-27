@@ -129,7 +129,6 @@ function HiddenCards({ count }: { count: number }) {
           style={{ left: `${index * 8}px`, zIndex: index }}
         />
       ))}
-      <span className="absolute -bottom-5 left-0 text-xs text-emerald-100/90">{count} cards</span>
     </div>
   );
 }
@@ -141,7 +140,8 @@ function PlayerSeatPanel({
   isDealer,
   isBidder,
   trickCount,
-  points
+  points,
+  cardsCount
 }: {
   player: MatchPlayer;
   relative: RelativeSeat;
@@ -150,17 +150,39 @@ function PlayerSeatPanel({
   isBidder: boolean;
   trickCount: number;
   points: number;
+  cardsCount: number;
 }) {
+  const isHorizontalLayout = relative === 'top' || relative === 'self';
+
   return (
-    <div className={`seat-panel seat-${relative} ${isTurn ? 'ring-2 ring-amber-300' : ''}`}>
+    <div
+      className={`seat-panel seat-${relative} ${isHorizontalLayout ? 'seat-panel-horizontal' : ''} ${
+        isTurn ? 'ring-2 ring-amber-300' : ''
+      }`}
+    >
       <p className="text-sm font-semibold text-white">{player.nickname}</p>
-      <p className="text-[11px] text-emerald-100/90">{seatLabel(player.seat)}</p>
-      <div className="mt-1 flex gap-2 text-[11px] text-emerald-100/90">
-        <span>{`Team ${player.team}`}</span>
-        {isDealer ? <span>Dealer</span> : null}
-        {isBidder ? <span>Bidder</span> : null}
-      </div>
-      <p className="mt-1 text-[11px] text-emerald-100/90">Tricks: {trickCount} | Points: {points}</p>
+      {isHorizontalLayout ? (
+        <div className="mt-1 flex flex-nowrap gap-3 overflow-x-auto whitespace-nowrap text-[11px] text-emerald-100/90">
+          <span className="shrink-0">{seatLabel(player.seat)}</span>
+          <span className="shrink-0">{`Team ${player.team}`}</span>
+          {isDealer ? <span className="shrink-0">Dealer</span> : null}
+          {isBidder ? <span className="shrink-0">Bidder</span> : null}
+          <span className="shrink-0">Cards: {cardsCount}</span>
+          <span className="shrink-0">Tricks: {trickCount}</span>
+          <span className="shrink-0">Points: {points}</span>
+        </div>
+      ) : (
+        <>
+          <p className="text-[11px] text-emerald-100/90">{seatLabel(player.seat)}</p>
+          <div className="mt-1 flex gap-2 text-[11px] text-emerald-100/90">
+            <span>{`Team ${player.team}`}</span>
+            {isDealer ? <span>Dealer</span> : null}
+            {isBidder ? <span>Bidder</span> : null}
+          </div>
+          <p className="mt-1 text-[11px] text-emerald-100/90">Cards: {cardsCount}</p>
+          <p className="mt-1 text-[11px] text-emerald-100/90">Tricks: {trickCount} | Points: {points}</p>
+        </>
+      )}
     </div>
   );
 }
@@ -1036,23 +1058,30 @@ export function App() {
                     isBidder={player.seat === match.roundState.bidderSeat}
                     trickCount={match.roundState.tricksWon[player.team]}
                     points={match.roundState.cardPointsWon[player.team]}
+                    cardsCount={
+                      player.seat === viewer.seat
+                        ? match.roundState.hands[player.seat].visibleCards.length
+                        : match.roundState.hands[player.seat].hiddenCount
+                    }
                   />
                 );
               })
                 : null}
 
               <div className="table-center">
-                <div className="mb-2 text-center text-xs uppercase tracking-widest text-emerald-100/80">
-                  Current Trick
-                </div>
                 <div className="trick-grid">
                   {(['top', 'left', 'right', 'self'] as RelativeSeat[]).map((slot) => {
                     const player = match.players.find((entry) => relativeSeat(viewer.seat, entry.seat) === slot);
                     const play = match.roundState.currentTrick.find((entry) => entry.seat === player?.seat);
+                    const isActiveTurnSlot = player?.seat === match.roundState.currentTurnSeat;
 
                     return (
                       <div key={slot} className={`trick-slot trick-slot-${slot}`}>
-                        {play ? <CardFace card={play.card} compact /> : <div className="empty-trick-slot" />}
+                        {play ? (
+                          <CardFace card={play.card} compact />
+                        ) : (
+                          <div className={`empty-trick-slot ${isActiveTurnSlot ? 'empty-trick-slot-active' : ''}`} />
+                        )}
                       </div>
                     );
                   })}
@@ -1061,19 +1090,19 @@ export function App() {
 
               {!isCompactTable
                 ? match.players.map((player) => {
-                if (player.seat === viewer.seat) {
-                  return null;
-                }
+                    if (player.seat === viewer.seat) {
+                      return null;
+                    }
 
-                return (
-                  <div
-                    key={`hidden-${player.userId}`}
-                    className={`hidden-hand hidden-hand-${relativeSeat(viewer.seat, player.seat)}`}
-                  >
-                    <HiddenCards count={match.roundState.hands[player.seat].hiddenCount} />
-                  </div>
-                );
-              })
+                    return (
+                      <div
+                        key={`hidden-${player.userId}`}
+                        className={`hidden-hand hidden-hand-${relativeSeat(viewer.seat, player.seat)}`}
+                      >
+                        <HiddenCards count={match.roundState.hands[player.seat].hiddenCount} />
+                      </div>
+                    );
+                  })
                 : null}
 
               <div className="self-hand">
@@ -1293,6 +1322,12 @@ export function App() {
                           <p className="text-emerald-100/90">
                             Team {player.team} | Tricks {match.roundState.tricksWon[player.team]} | Points{' '}
                             {match.roundState.cardPointsWon[player.team]}
+                          </p>
+                          <p className="text-emerald-100/90">
+                            Cards{' '}
+                            {player.seat === viewer.seat
+                              ? match.roundState.hands[player.seat].visibleCards.length
+                              : match.roundState.hands[player.seat].hiddenCount}
                           </p>
                           <p className="text-emerald-100/90">
                             {player.seat === match.roundState.currentTurnSeat ? 'Current Turn' : 'Waiting'}
