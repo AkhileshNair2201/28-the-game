@@ -7,7 +7,7 @@
 - Start date: `2026-02-27`
 - Target completion date: `2026-02-27`
 - Last updated: `2026-02-27`
-- Notes: `Added client-side pending-action guard and automatic resync on version conflict. Full reconnect seat-reservation policy UX is pending.`
+- Notes: `Added client-side pending-action guard, automatic resync on version conflict, localStorage session restore, and persisted server store for lobby/match continuity. Seat-reservation timeout UX remains pending.`
 
 ## Checklist
 - [x] Tasks started
