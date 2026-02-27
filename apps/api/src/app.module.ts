@@ -10,10 +10,14 @@ import { LobbiesController } from './lobbies/lobbies.controller';
 import { LobbiesService } from './lobbies/lobbies.service';
 import { LobbyEventsService } from './lobbies/lobby-events.service';
 import { LobbyGateway } from './lobbies/lobby.gateway';
+import { MatchesController } from './matches/matches.controller';
+import { MatchesService } from './matches/matches.service';
+import { MatchEventsService } from './matches/match-events.service';
+import { MatchGateway } from './matches/match.gateway';
 
 @Module({
   imports: [],
-  controllers: [AppController, AuthController, UsersController, LobbiesController],
+  controllers: [AppController, AuthController, UsersController, LobbiesController, MatchesController],
   providers: [
     AppService,
     AuthTokenService,
@@ -21,7 +25,10 @@ import { LobbyGateway } from './lobbies/lobby.gateway';
     AuthGuard,
     LobbiesService,
     LobbyEventsService,
-    LobbyGateway
+    LobbyGateway,
+    MatchesService,
+    MatchEventsService,
+    MatchGateway
   ]
 })
 export class AppModule {}

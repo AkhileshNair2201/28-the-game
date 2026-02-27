@@ -22,5 +22,5 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 export function cloneState<T>(value: T): T {
-  return structuredClone(value);
+  return JSON.parse(JSON.stringify(value)) as T;
 }

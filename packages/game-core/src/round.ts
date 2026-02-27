@@ -1,5 +1,5 @@
 import { GameRuleError } from './errors';
-import { nextSeatCounterClockwise } from './helpers';
+import { cloneState, nextSeatCounterClockwise } from './helpers';
 import { shuffleDeck } from './deck';
 import { RoundScore, RoundState, Seat } from './types';
 
@@ -62,7 +62,7 @@ export function createRoundState(input: {
 }
 
 export function dealCards(state: RoundState, cardsPerPlayer: number): RoundState {
-  const next = structuredClone(state);
+  const next = cloneState(state);
   let seat = nextSeatCounterClockwise(next.dealerSeat);
 
   for (let round = 0; round < cardsPerPlayer; round += 1) {

@@ -131,6 +131,21 @@ export class LobbiesService {
     return this.toView(lobby);
   }
 
+  setStatus(roomCode: string, actorUserId: string, status: LobbyRecord['status']): LobbyView {
+    const lobby = this.getLobbyRecord(roomCode);
+
+    if (lobby.ownerUserId !== actorUserId) {
+      throw new ForbiddenException('Only lobby owner can update lobby status.');
+    }
+
+    lobby.status = status;
+    this.bumpLobbyVersion(lobby);
+    const view = this.toView(lobby);
+    this.emitLobbySnapshot(view);
+
+    return view;
+  }
+
   deleteLobby(roomCode: string, actorUserId: string): void {
     const lobby = this.getLobbyRecord(roomCode);
 
