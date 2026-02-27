@@ -83,10 +83,16 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     this.socketMatchMap.set(client.id, { matchId, userId });
 
     const projected = this.matchesService.getProjectedState(matchId, userId);
-    this.server.to(client.id).emit('match_state_delta', projected);
+    if (this.server) {
+      this.server.to(client.id).emit('match_state_delta', projected);
+    }
   }
 
   private forwardEvent(event: MatchDomainEvent): void {
+    if (!this.server?.sockets?.adapter?.rooms) {
+      return;
+    }
+
     const roomName = this.getRoomName(event.matchId);
     const sockets = this.server.sockets.adapter.rooms.get(roomName);
 

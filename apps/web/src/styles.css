@@ -10,3 +10,395 @@
 body {
   margin: 0;
 }
+
+.table-layout {
+  position: relative;
+  min-height: 560px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at center, rgba(42, 132, 103, 0.45), rgba(7, 38, 29, 0.95) 62%),
+    repeating-radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0 2px, transparent 2px 8px);
+  overflow: hidden;
+}
+
+.seat-panel {
+  position: absolute;
+  width: 180px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.8rem;
+  background: rgba(4, 26, 20, 0.7);
+  padding: 0.55rem;
+}
+
+.seat-self {
+  left: 50%;
+  bottom: 1.1rem;
+  transform: translateX(-50%);
+}
+
+.seat-top {
+  left: 50%;
+  top: 0.9rem;
+  transform: translateX(-50%);
+}
+
+.seat-left {
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.seat-right {
+  right: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.table-center {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  height: 180px;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.trick-grid {
+  position: relative;
+  width: 200px;
+  height: 140px;
+}
+
+.trick-slot {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.trick-slot-top {
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.trick-slot-left {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.trick-slot-right {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.trick-slot-self {
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+
+.empty-trick-slot {
+  width: 48px;
+  height: 64px;
+  border: 1px dashed rgba(255, 255, 255, 0.24);
+  border-radius: 0.5rem;
+}
+
+.hidden-hand {
+  position: absolute;
+}
+
+.hidden-hand-top {
+  left: 50%;
+  top: 7.2rem;
+  transform: translateX(-50%);
+}
+
+.hidden-hand-left {
+  left: 13.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.hidden-hand-right {
+  right: 13.2rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.self-hand {
+  position: absolute;
+  left: 50%;
+  bottom: 7rem;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.45rem;
+  max-width: calc(100% - 220px);
+  overflow-x: auto;
+  padding: 0.3rem;
+}
+
+.card-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  transition: transform 140ms ease;
+}
+
+.card-button:hover {
+  transform: translateY(-6px);
+}
+
+.card-legal {
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.42));
+}
+
+.card-disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.card-face {
+  border-radius: 0.58rem;
+  border: 1px solid rgba(9, 22, 43, 0.12);
+  background: linear-gradient(165deg, #ffffff, #f6f7f8);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.3rem;
+  font-weight: 700;
+}
+
+.card-back {
+  border-radius: 0.58rem;
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  background:
+    linear-gradient(145deg, #1e2f5f, #2a5f7f),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.08) 0 6px, transparent 6px 12px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.bid-chip {
+  position: absolute;
+  z-index: 4;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.96);
+  color: #0f172a;
+  font-size: 0.74rem;
+  font-weight: 700;
+  animation: bidRise 850ms ease;
+}
+
+.bid-chip-self {
+  left: 50%;
+  bottom: 13rem;
+  transform: translateX(-50%);
+}
+
+.bid-chip-top {
+  left: 50%;
+  top: 6.4rem;
+  transform: translateX(-50%);
+}
+
+.bid-chip-left {
+  left: 11rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.bid-chip-right {
+  right: 11rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.trick-collect {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -18px;
+  margin-top: -12px;
+  z-index: 5;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.95);
+  color: #032317;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.45rem;
+}
+
+.trick-collect-self {
+  animation: collectSelf 700ms ease;
+}
+
+.trick-collect-top {
+  animation: collectTop 700ms ease;
+}
+
+.trick-collect-left {
+  animation: collectLeft 700ms ease;
+}
+
+.trick-collect-right {
+  animation: collectRight 700ms ease;
+}
+
+.deal-anim-a .card-deal-0,
+.deal-anim-a .card-deal-1,
+.deal-anim-a .card-deal-2,
+.deal-anim-a .card-deal-3,
+.deal-anim-b .card-deal-0,
+.deal-anim-b .card-deal-1,
+.deal-anim-b .card-deal-2,
+.deal-anim-b .card-deal-3 {
+  animation-name: dealIn;
+  animation-duration: 420ms;
+  animation-fill-mode: both;
+}
+
+.card-deal-0 {
+  animation-delay: 70ms;
+}
+
+.card-deal-1 {
+  animation-delay: 170ms;
+}
+
+.card-deal-2 {
+  animation-delay: 270ms;
+}
+
+.card-deal-3 {
+  animation-delay: 370ms;
+}
+
+@keyframes dealIn {
+  from {
+    transform: translateY(-50px) scale(0.86);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bidRise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes collectSelf {
+  to {
+    transform: translate(0, 200px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes collectTop {
+  to {
+    transform: translate(0, -200px) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes collectLeft {
+  to {
+    transform: translate(-240px, 0) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@keyframes collectRight {
+  to {
+    transform: translate(240px, 0) scale(0.7);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .table-layout {
+    min-height: 480px;
+  }
+
+  .seat-panel {
+    width: 140px;
+    padding: 0.42rem;
+  }
+
+  .hidden-hand-left {
+    left: 9rem;
+  }
+
+  .hidden-hand-right {
+    right: 9rem;
+  }
+
+  .self-hand {
+    max-width: calc(100% - 120px);
+  }
+}
+
+@media (max-width: 640px) {
+  .table-layout {
+    min-height: 430px;
+  }
+
+  .seat-panel {
+    width: 108px;
+  }
+
+  .seat-left {
+    left: 0.2rem;
+  }
+
+  .seat-right {
+    right: 0.2rem;
+  }
+
+  .hidden-hand-left {
+    left: 7rem;
+  }
+
+  .hidden-hand-right {
+    right: 7rem;
+  }
+
+  .self-hand {
+    bottom: 6.3rem;
+    max-width: calc(100% - 40px);
+  }
+
+  .card-face {
+    padding: 0.3rem 0.2rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

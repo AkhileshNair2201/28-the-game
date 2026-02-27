@@ -23,6 +23,11 @@ export class MatchesController {
     return this.matchesService.getProjectedState(matchId, actorUserId);
   }
 
+  @Get('room/:roomCode/state')
+  getStateByRoom(@Param('roomCode') roomCode: string, @CurrentUserId() actorUserId: string) {
+    return this.matchesService.getProjectedStateByRoom(roomCode, actorUserId);
+  }
+
   @Post(':matchId/intents')
   applyIntent(
     @Param('matchId') matchId: string,

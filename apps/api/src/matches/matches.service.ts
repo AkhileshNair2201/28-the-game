@@ -117,6 +117,18 @@ export class MatchesService {
     return this.projectForUser(match, actorUserId);
   }
 
+  getProjectedStateByRoom(roomCode: string, actorUserId: string): ProjectedMatchState {
+    const match = [...this.matchesById.values()].find(
+      (entry) => entry.roomCode === roomCode && entry.players.some((player) => player.userId === actorUserId)
+    );
+
+    if (!match) {
+      throw new NotFoundException('Active match not found for room.');
+    }
+
+    return this.projectForUser(match, actorUserId);
+  }
+
   applyIntent(matchId: string, actorUserId: string, intent: MatchIntent): MatchIntentResult {
     const match = this.getMatchRecord(matchId);
     this.assertPlayerInMatch(match, actorUserId);

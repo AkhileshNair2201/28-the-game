@@ -1,4 +1,11 @@
-import { GuestSession, LobbyView, PublicUser } from './types';
+import {
+  GuestSession,
+  LobbyView,
+  MatchIntent,
+  MatchIntentResult,
+  ProjectedMatchState,
+  PublicUser
+} from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api';
 
@@ -104,5 +111,47 @@ export function setLobbyReady(token: string, roomCode: string, ready: boolean): 
       Authorization: `Bearer ${token}`
     },
     body: JSON.stringify({ ready })
+  });
+}
+
+export function startMatch(token: string, roomCode: string): Promise<ProjectedMatchState> {
+  return fetchJson<ProjectedMatchState>('/matches/start', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ roomCode })
+  });
+}
+
+export function getMatchState(token: string, matchId: string): Promise<ProjectedMatchState> {
+  return fetchJson<ProjectedMatchState>(`/matches/${matchId}/state`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+}
+
+export function getMatchStateByRoom(token: string, roomCode: string): Promise<ProjectedMatchState> {
+  return fetchJson<ProjectedMatchState>(`/matches/room/${roomCode}/state`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+}
+
+export function applyMatchIntent(
+  token: string,
+  matchId: string,
+  intent: MatchIntent
+): Promise<MatchIntentResult> {
+  return fetchJson<MatchIntentResult>(`/matches/${matchId}/intents`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(intent)
   });
 }
